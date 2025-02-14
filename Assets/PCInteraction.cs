@@ -7,6 +7,7 @@ public class PCInteraction : MonoBehaviour
     public LayerMask pcLayer; // Layer mask for PC interaction
     public GameObject interactionPrompt; // Assign UI prompt here
     public ProximityDetection proximityScript; // Assign the ProximityDetection script
+    public MonitorGUI monitorGUI; // Reference to the MonitorGUI script
 
 
     private void Update()
@@ -17,9 +18,10 @@ public class PCInteraction : MonoBehaviour
 
             if (Input.GetKeyDown(KeyCode.E))
             {
-                Debug.Log("Interacted with the PC");
                 interactionPrompt.SetActive(false); // Hide the prompt during the transition
                 GetComponent<CameraPan>().StartCameraPan(); // Trigger the camera pan
+
+                monitorGUI.ShowGUI(); // Show the monitor UI
             }
         }
         else
