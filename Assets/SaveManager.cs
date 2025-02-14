@@ -68,19 +68,22 @@ public class SaveManager : MonoBehaviour
         }
     }
 
-    public PlayerData LoadOrCreatePlayerData(string playerID)
+    public PlayerData LoadOrCreatePlayerData(string playerID, int saveSlot)
     {
-        if (GameManager.Instance.gameData.allPlayers.ContainsKey(playerID))
+        string uniqueKey = $"{saveSlot}_{playerID}"; // Scope playerID to the save slot
+
+        if (GameManager.Instance.gameData.allPlayers.ContainsKey(uniqueKey))
         {
-            Debug.Log($"Loaded existing data for Player ID: {playerID}");
-            return GameManager.Instance.gameData.allPlayers[playerID];
+            Debug.Log($"Loaded existing data for Player ID: {playerID} in Save Slot {saveSlot}");
+            return GameManager.Instance.gameData.allPlayers[uniqueKey];
         }
         else
         {
-            Debug.Log($"Creating new player data for Player ID: {playerID}");
+            Debug.Log($"Creating new player data for Player ID: {playerID} in Save Slot {saveSlot}");
             PlayerData newPlayer = new PlayerData(playerID);
-            GameManager.Instance.gameData.allPlayers[playerID] = newPlayer;
+            GameManager.Instance.gameData.allPlayers[uniqueKey] = newPlayer;
             return newPlayer;
         }
     }
+
 }

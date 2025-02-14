@@ -8,28 +8,33 @@ public class PlayerController : MonoBehaviour
 
     private void Start()
     {
-        // Load the Player ID from PlayerPrefs (or Steam ID if online)
-        if (PlayerPrefs.HasKey("PlayerID"))
-        {
-            playerID = PlayerPrefs.GetString("PlayerID");
-        }
-        else
-        {
-            playerID = System.Guid.NewGuid().ToString();
-            PlayerPrefs.SetString("PlayerID", playerID);
-            PlayerPrefs.Save();
-        }
-
+        // Try to get Steam ID if Steam is available
         if (SteamManager.Initialized)
         {
             playerID = SteamUser.GetSteamID().ToString();
+            PlayerPrefs.SetString("BackupPlayerID", playerID); // Store Steam ID as backup
+            PlayerPrefs.Save();
+        }
+        else
+        {
+            // If Steam isn't available, fall back to stored PlayerPrefs ID
+            if (PlayerPrefs.HasKey("BackupPlayerID"))
+            {
+                playerID = PlayerPrefs.GetString("BackupPlayerID");
+                Debug.Log($"Using Backup Player ID: {playerID} (Offline Mode)");
+            }
+            else
+            {
+                // No previous ID stored, generate a new one
+                playerID = System.Guid.NewGuid().ToString();
+                PlayerPrefs.SetString("BackupPlayerID", playerID);
+                PlayerPrefs.Save();
+                Debug.Log($"Generated new Backup Player ID: {playerID}");
+            }
         }
 
-        // Load the player's saved data
-        playerData = SaveManager.Instance.LoadOrCreatePlayerData(playerID);
-
-        // **THIS APPLIES THE LOADED STATE TO THE PLAYER!**
-        ApplyLoadedData();
+        // Load the player's saved data, now correctly scoped to save slot
+        playerData = SaveManager.Instance.LoadOrCreatePlayerData(playerID, PlayerPrefs.GetInt("SelectedSaveSlot", 1));
     }
 
     private void ApplyLoadedData()
