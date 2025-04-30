@@ -26,6 +26,7 @@ public class FirstPersonController : MonoBehaviour
     public bool invertCamera = false;
     public bool cameraCanMove = true;
     public bool smoothCamera;
+    public float cameraSmoothingSpeed = 10f;
     public float mouseSensitivity = 2f;
     public float maxLookAngle = 50f;
 
@@ -420,8 +421,8 @@ public class FirstPersonController : MonoBehaviour
         if (smoothCamera)
         {
             // Smoothly interpolate both pitch and yaw
-            currentYaw = Mathf.LerpAngle(currentYaw, yaw, Time.deltaTime * 10f);
-            currentPitch = Mathf.LerpAngle(currentPitch, pitch, Time.deltaTime * 10f);
+            currentYaw = Mathf.LerpAngle(currentYaw, yaw, Time.deltaTime * cameraSmoothingSpeed);
+            currentPitch = Mathf.LerpAngle(currentPitch, pitch, Time.deltaTime * cameraSmoothingSpeed);
 
             transform.localEulerAngles = new Vector3(0f, currentYaw, 0f);
             playerCamera.transform.localEulerAngles = new Vector3(currentPitch, 0f, 0f);
@@ -602,6 +603,12 @@ public class FirstPersonController : MonoBehaviour
         GUI.enabled = fpc.cameraCanMove;
 
         fpc.smoothCamera = EditorGUILayout.ToggleLeft(new GUIContent("Smooth Camera Movement", "Enables smooth rotation using interpolation. Ideal for demo recording."), fpc.smoothCamera);
+        if (fpc.smoothCamera)
+        {
+            EditorGUI.indentLevel++;
+            fpc.cameraSmoothingSpeed = EditorGUILayout.Slider(new GUIContent("Smoothing Speed", "How quickly the camera catches up to input (higher = faster)"), fpc.cameraSmoothingSpeed, 1f, 50f);
+            EditorGUI.indentLevel--;
+        }
         fpc.invertCamera = EditorGUILayout.ToggleLeft(new GUIContent("Invert Camera Rotation", "Inverts the up and down movement of the camera."), fpc.invertCamera);
         fpc.mouseSensitivity = EditorGUILayout.Slider(new GUIContent("Look Sensitivity", "Determines how sensitive the mouse movement is."), fpc.mouseSensitivity, .1f, 10f);
         fpc.maxLookAngle = EditorGUILayout.Slider(new GUIContent("Max Look Angle", "Determines the max and min angle the player camera is able to look."), fpc.maxLookAngle, 40, 90);
