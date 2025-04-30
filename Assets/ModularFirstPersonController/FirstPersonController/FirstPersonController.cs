@@ -25,6 +25,7 @@ public class FirstPersonController : MonoBehaviour
     public float fov = 60f;
     public bool invertCamera = false;
     public bool cameraCanMove = true;
+    public bool smoothCamera;
     public float mouseSensitivity = 2f;
     public float maxLookAngle = 50f;
 
@@ -397,27 +398,44 @@ public class FirstPersonController : MonoBehaviour
         HandleCameraZoom();
     }
 
+    private float currentYaw;
+    private float currentPitch;
+
     private void HandleCameraRotation()
     {
-        if (cameraCanMove)
+        if (!cameraCanMove) return;
+
+        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
+        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
+
+        yaw += mouseX;
+
+        if (!invertCamera)
+            pitch -= mouseY;
+        else
+            pitch += mouseY;
+
+        pitch = Mathf.Clamp(pitch, -maxLookAngle, maxLookAngle);
+
+        if (smoothCamera)
         {
-            yaw = transform.localEulerAngles.y + Input.GetAxis("Mouse X") * mouseSensitivity;
+            // Smoothly interpolate both pitch and yaw
+            currentYaw = Mathf.LerpAngle(currentYaw, yaw, Time.deltaTime * 10f);
+            currentPitch = Mathf.LerpAngle(currentPitch, pitch, Time.deltaTime * 10f);
 
-            if (!invertCamera)
-            {
-                pitch -= mouseSensitivity * Input.GetAxis("Mouse Y");
-            }
-            else
-            {
-                pitch += mouseSensitivity * Input.GetAxis("Mouse Y");
-            }
-
-            pitch = Mathf.Clamp(pitch, -maxLookAngle, maxLookAngle);
-
-            transform.localEulerAngles = new Vector3(0, yaw, 0);
-            playerCamera.transform.localEulerAngles = new Vector3(pitch, 0, 0);
+            transform.localEulerAngles = new Vector3(0f, currentYaw, 0f);
+            playerCamera.transform.localEulerAngles = new Vector3(currentPitch, 0f, 0f);
+        }
+        else
+        {
+            transform.localEulerAngles = new Vector3(0f, yaw, 0f);
+            playerCamera.transform.localEulerAngles = new Vector3(pitch, 0f, 0f);
+            currentYaw = yaw;
+            currentPitch = pitch;
         }
     }
+
+
 
     private void HandleCameraZoom()
     {
@@ -582,6 +600,8 @@ public class FirstPersonController : MonoBehaviour
         fpc.cameraCanMove = EditorGUILayout.ToggleLeft(new GUIContent("Enable Camera Rotation", "Determines if the camera is allowed to move."), fpc.cameraCanMove);
 
         GUI.enabled = fpc.cameraCanMove;
+
+        fpc.smoothCamera = EditorGUILayout.ToggleLeft(new GUIContent("Smooth Camera Movement", "Enables smooth rotation using interpolation. Ideal for demo recording."), fpc.smoothCamera);
         fpc.invertCamera = EditorGUILayout.ToggleLeft(new GUIContent("Invert Camera Rotation", "Inverts the up and down movement of the camera."), fpc.invertCamera);
         fpc.mouseSensitivity = EditorGUILayout.Slider(new GUIContent("Look Sensitivity", "Determines how sensitive the mouse movement is."), fpc.mouseSensitivity, .1f, 10f);
         fpc.maxLookAngle = EditorGUILayout.Slider(new GUIContent("Max Look Angle", "Determines the max and min angle the player camera is able to look."), fpc.maxLookAngle, 40, 90);
@@ -654,6 +674,8 @@ public class FirstPersonController : MonoBehaviour
         fpc.sprintDuration = EditorGUILayout.Slider(new GUIContent("Sprint Duration", "Determines how long the player can sprint while unlimited sprint is disabled."), fpc.sprintDuration, 1f, 20f);
         fpc.sprintCooldown = EditorGUILayout.Slider(new GUIContent("Sprint Cooldown", "Determines how long the recovery time is when the player runs out of sprint."), fpc.sprintCooldown, .1f, fpc.sprintDuration);
         //GUI.enabled = true;
+        fpc.sprintFOVPercent = EditorGUILayout.Slider(new GUIContent("Sprint FOV Boost (%)", "Percent increase applied to the default FOV during sprinting."), fpc.sprintFOVPercent, 0f, 1f);
+
 
         fpc.sprintFOVStepTime = EditorGUILayout.Slider(new GUIContent("Step Time", "Determines how fast the FOV transitions while sprinting."), fpc.sprintFOVStepTime, .1f, 20f);
 
